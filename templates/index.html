@@ -12,31 +12,35 @@
 <body>
 
     <h1>AI Chatbot with RAG</h1>
+
     <h2>Upload PDF</h2>
 
-<input type="file" id="pdfFile">
+    <input type="file" id="pdfFile">
 
-<button onclick="uploadPDF()">
-    Upload
-</button>
+    <button onclick="uploadPDF()">
+        Upload
+    </button>
 
-<hr>
-    <div class="chat-box" id="chatBox"></div>
+    <hr>
 
-    <div class="input-area">
+    <h2>Ask Question</h2>
 
-        <input
-            type="text"
-            id="question"
-            placeholder="Ask anything...">
+    <input
+        type="text"
+        id="question"
+        placeholder="Ask anything...">
 
-        <button onclick="sendMessage()">
-            Send
-        </button>
+    <button onclick="sendMessage()">
+        Send
+    </button>
 
-    </div>
+    <hr>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+    <h3>Answer</h3>
+
+    <div id="answer"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 

@@ -6,8 +6,12 @@ from rag.chunking import split_text
 from rag.embedding import create_embeddings
 from rag.vector_store import create_vector_store
 from rag.retriever import retrieve_chunks
+from rag.gemini import ask_gemini
 
 app = Flask(__name__)
+# Global variables
+vector_db = None
+chunks = None
 
 # Upload folder
 UPLOAD_FOLDER = "uploads"
@@ -26,12 +30,33 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
 
-    data = request.get_json()
+    global vector_db
+    global chunks
 
+    # Check if PDF has been uploaded
+    if vector_db is None or chunks is None:
+        return jsonify({
+            "answer": "Please upload a PDF first."
+        })
+
+    data = request.get_json()
     question = data["question"]
 
-    # Temporary response
-    answer = f"You asked: {question}"
+    # Retrieve relevant chunks
+    results = retrieve_chunks(
+        vector_db,
+        chunks,
+        question
+    )
+
+    # Combine retrieved chunks
+    context = "\n\n".join(results)
+
+    # Ask Gemini
+    answer = ask_gemini(
+        context,
+        question
+    )
 
     return jsonify({
         "answer": answer
@@ -41,7 +66,9 @@ def chat():
 # -------------------- Upload PDF --------------------
 @app.route("/upload", methods=["POST"])
 def upload_pdf():
-
+    
+    global vector_db
+    global chunks
     # Check PDF
     if "pdf" not in request.files:
         return jsonify({
