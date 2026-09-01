@@ -1,16 +1,15 @@
 from flask import Flask, render_template, request, jsonify
 import os
 
-from langchain import embeddings
-
 from rag.pdf_loader import load_pdf
 from rag.chunking import split_text
 from rag.embedding import create_embeddings
 from rag.vector_store import create_vector_store
+from rag.retriever import retrieve_chunks
 
 app = Flask(__name__)
 
-# Upload folder configuration
+# Upload folder
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -31,6 +30,7 @@ def chat():
 
     question = data["question"]
 
+    # Temporary response
     answer = f"You asked: {question}"
 
     return jsonify({
@@ -42,7 +42,7 @@ def chat():
 @app.route("/upload", methods=["POST"])
 def upload_pdf():
 
-    # Check whether PDF is uploaded
+    # Check PDF
     if "pdf" not in request.files:
         return jsonify({
             "message": "No PDF uploaded"
@@ -50,7 +50,6 @@ def upload_pdf():
 
     pdf = request.files["pdf"]
 
-    # Check whether filename is empty
     if pdf.filename == "":
         return jsonify({
             "message": "Please select a PDF"
@@ -67,46 +66,60 @@ def upload_pdf():
     # Read PDF
     pdf_text = load_pdf(file_path)
 
-    # Check if PDF could be read
     if pdf_text is None:
         return jsonify({
             "message": "Invalid or corrupted PDF"
         }), 400
 
-    # Print extracted text
+    # Print PDF Text
     print("\n========== PDF TEXT ==========\n")
     print(pdf_text)
 
     # Split into chunks
     chunks = split_text(pdf_text)
-    
+
+    # Create embeddings
     embeddings = create_embeddings(chunks)
-    
+
+    # Create FAISS Vector Store
     vector_db = create_vector_store(
         chunks,
         embeddings
     )
 
-    print("\n===== VECTOR DATABASE =====\n")
-
+    print("\n===== VECTOR DATABASE =====")
     print("Total vectors stored:", vector_db.ntotal)
-    
-    print("\n===== EMBEDDINGS =====\n")
 
+    # ---------------- Retrieval Test ----------------
+
+    question = "Who created Python?"
+
+    results = retrieve_chunks(
+        vector_db,
+        chunks,
+        question
+    )
+
+    print("\n===== RETRIEVED CHUNKS =====\n")
+
+    for i, chunk in enumerate(results):
+        print(f"Result {i+1}")
+        print(chunk)
+        print("-" * 60)
+
+    # -----------------------------------------------
+
+    print("\n===== EMBEDDINGS =====")
     print(f"Number of Chunks : {len(chunks)}")
-
     print(f"Number of Embeddings : {len(embeddings)}")
-
     print(f"Embedding Dimension : {len(embeddings[0])}")
 
     print("\n========== CHUNKS ==========\n")
 
     for i, chunk in enumerate(chunks):
-        print(f"\nChunk {i+1}\n")
+        print(f"Chunk {i+1}")
         print(chunk)
         print("-" * 60)
-
-    print("\n=============================\n")
 
     return jsonify({
         "message": "PDF Uploaded Successfully"
