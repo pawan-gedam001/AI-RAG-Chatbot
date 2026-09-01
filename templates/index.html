@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI RAG Chatbot</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <h1>AI Chatbot with RAG</h1>
+    <h2>Upload PDF</h2>
+
+<input type="file" id="pdfFile">
+
+<button onclick="uploadPDF()">
+    Upload
+</button>
+
+<hr>
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="input-area">
+
+        <input
+            type="text"
+            id="question"
+            placeholder="Ask anything...">
+
+        <button onclick="sendMessage()">
+            Send
+        </button>
+
+    </div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
